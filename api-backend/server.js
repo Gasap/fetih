@@ -95,6 +95,15 @@ function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+// Helper to authenticate admin
+async function isAdminSession(req) {
+  const userId = req.cookies["refresh_token"];
+  if (!userId) return false;
+  const db = await readDB();
+  const user = db.users.find((u) => u.id === userId);
+  return user && (user.role === "admin" || user.role === "root");
+}
+
 // Routes
 app.get("/auth/login/discord", (req, res) => {
   const redirectUri = req.query.redirect_uri;
@@ -107,7 +116,7 @@ app.get("/auth/login/discord", (req, res) => {
         <style>
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1e1e24;
+            background-color: #1a1a22;
             color: #fff;
             display: flex;
             justify-content: center;
@@ -116,45 +125,58 @@ app.get("/auth/login/discord", (req, res) => {
             margin: 0;
           }
           .card {
-            background-color: #2d2d38;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            width: 320px;
+            background-color: #242430;
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 350px;
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
           }
-          h2 { margin-bottom: 20px; color: #ffcc00; }
+          h2 { margin-bottom: 25px; color: #ffcc00; font-size: 24px; font-weight: 800; }
           input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin: 10px 0;
-            border: 1px solid #444;
-            border-radius: 6px;
-            background-color: #1a1a22;
+            border: 1px solid #3a3a4a;
+            border-radius: 8px;
+            background-color: #13131a;
             color: #fff;
             box-sizing: border-box;
+            font-size: 15px;
+            transition: border-color 0.3s;
+          }
+          input:focus {
+            border-color: #ffcc00;
+            outline: none;
           }
           button {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             background-color: #ffcc00;
             color: #000;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 20px;
             font-size: 16px;
+            transition: background-color 0.3s, transform 0.1s;
           }
           button:hover { background-color: #e5b800; }
+          button:active { transform: scale(0.98); }
           .switch {
-            margin-top: 20px;
+            margin-top: 25px;
             font-size: 14px;
-            color: #aaa;
+            color: #ffcc00;
             cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+          }
+          .switch:hover {
             text-decoration: underline;
           }
-          .error { color: #ff3333; margin-top: 10px; font-size: 14px; }
+          .error { color: #ff4d4d; margin-top: 15px; font-size: 14px; font-weight: 500; }
         </style>
       </head>
       <body>
@@ -204,7 +226,7 @@ app.get("/auth/login/discord", (req, res) => {
   `);
 });
 
-// Alias for Google login as well
+// Alias for Google login
 app.get("/auth/login/google", (req, res) => {
   res.redirect(`/api-backend/auth/login/discord?redirect_uri=${req.query.redirect_uri}`);
 });
@@ -244,7 +266,8 @@ app.post("/auth/login/submit", async (req, res) => {
       flares: [],
       achievements: { singleplayerMap: [] },
       friends: [],
-      subscription: null
+      subscription: null,
+      currency: { soft: 1000, hard: 100 }
     };
 
     db.users.push(newUser);
@@ -277,13 +300,8 @@ app.get("/auth/login/token", async (req, res) => {
     return res.status(401).json({ error: "Invalid login token" });
   }
 
-  // Delete single-use login token
   loginTokens.delete(loginToken);
 
-  // Set HTTP-only cookie with refresh token
-  const refreshToken = crypto.randomUUID();
-  // Save refresh token in database or memory (we will save in memory simple Map for simplicity)
-  // Store session mapping
   res.setHeader(
     "Set-Cookie",
     `refresh_token=${user.id}; Path=/api-backend; HttpOnly; Max-Age=2592000; SameSite=Lax`
@@ -346,12 +364,6 @@ app.get("/users/@me", async (req, res) => {
       audience: `imparatorluk.online`,
     });
 
-    const publicId = uuidToBase64url(payload.sub); // Wait, sub is already parsed or is it in base64url?
-    // Let's resolve the UUID from sub.
-    // In our TokenPayloadSchema: sub gets transformed back to UUID.
-    // So payload.sub is actually the raw UUID or the base64url.
-    // jose.jwtVerify will return payload as-is. So sub is the base64url string.
-    // Let's convert it back to UUID to lookup in our DB.
     const hex = jose.base64url.decode(payload.sub);
     const bytesHex = Array.from(hex).map((b) => b.toString(16).padStart(2, "0")).join("");
     const uuid = [
@@ -381,7 +393,8 @@ app.get("/users/@me", async (req, res) => {
         flares: player.flares || [],
         achievements: player.achievements || { singleplayerMap: [] },
         friends: player.friends || [],
-        subscription: player.subscription
+        subscription: player.subscription,
+        currency: player.currency || { soft: 1000, hard: 100 }
       }
     });
   } catch (e) {
@@ -389,7 +402,6 @@ app.get("/users/@me", async (req, res) => {
   }
 });
 
-// Fallback profile endpoint
 app.get("/player/:playerId", async (req, res) => {
   const db = await readDB();
   const player = db.players.find((p) => p.publicId === req.params.playerId);
@@ -427,6 +439,176 @@ app.get("/leaderboard/ranked", (req, res) => {
   res.json({
     oneVone: []
   });
+});
+
+// Admin Panel Dashboard Route
+app.get("/admin", async (req, res) => {
+  const isAuthorized = await isAdminSession(req);
+  if (!isAuthorized) {
+    return res.status(403).send("<h1>403 Forbidden - Bu panele yalnizca admin yetkisi olan hesaplar girebilir.</h1>");
+  }
+
+  const db = await readDB();
+  
+  let userRows = "";
+  for (const user of db.users) {
+    const player = db.players.find((p) => p.publicId === user.publicId) || {};
+    const soft = player.currency?.soft ?? 0;
+    const hard = player.currency?.hard ?? 0;
+    userRows += `
+      <tr>
+        <td>${user.username}</td>
+        <td>${user.role || 'user'}</td>
+        <td>${soft} Altın / ${hard} Elmas</td>
+        <td>
+          <form style="display:inline" method="POST" action="/api-backend/admin/update">
+            <input type="hidden" name="userId" value="${user.id}">
+            <select name="role">
+              <option value="user" ${user.role !== 'admin' ? 'selected' : ''}>Kullanıcı</option>
+              <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+            </select>
+            <input type="number" name="soft" placeholder="Altın" style="width:70px; padding:4px;" value="${soft}">
+            <input type="number" name="hard" placeholder="Elmas" style="width:70px; padding:4px;" value="${hard}">
+            <button type="submit" class="btn btn-save">Güncelle</button>
+          </form>
+          <form style="display:inline" method="POST" action="/api-backend/admin/delete" onsubmit="return confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')">
+            <input type="hidden" name="userId" value="${user.id}">
+            <button type="submit" class="btn btn-delete">Sil</button>
+          </form>
+        </td>
+      </tr>
+    `;
+  }
+
+  res.send(`
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>İmparatorluk - Yönetim Paneli</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #141419;
+            color: #e2e2e7;
+            margin: 0;
+            padding: 40px;
+          }
+          .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #1e1e24;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+          }
+          h1 { color: #ffcc00; font-weight: 800; font-size: 28px; margin-bottom: 20px; }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #2e2e38;
+          }
+          th {
+            background-color: #24242e;
+            color: #ffcc00;
+            font-weight: 700;
+          }
+          tr:hover { background-color: rgba(255,255,255,0.02); }
+          .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+          }
+          .btn-save { background-color: #ffcc00; color: #000; margin-left: 5px; }
+          .btn-save:hover { background-color: #e5b800; }
+          .btn-delete { background-color: #ff4d4d; color: #fff; margin-left: 5px; }
+          .btn-delete:hover { background-color: #e60000; }
+          select, input {
+            background-color: #141419;
+            color: #fff;
+            border: 1px solid #3e3e4a;
+            border-radius: 4px;
+            padding: 4px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>İmparatorluk Yönetim Paneli</h1>
+          <p>Sitenizdeki kayıtlı kullanıcıları buradan yönetebilir, yetki verebilir veya market paralarını güncelleyebilirsiniz.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Kullanıcı Adı</th>
+                <th>Rolü</th>
+                <th>Bakiye</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${userRows}
+            </tbody>
+          </table>
+        </div>
+      </body>
+    </html>
+  `);
+});
+
+// Update user details
+app.post("/admin/update", async (req, res) => {
+  const isAuthorized = await isAdminSession(req);
+  if (!isAuthorized) return res.status(403).send("Unauthorized");
+
+  const { userId, role, soft, hard } = req.body;
+  const db = await readDB();
+
+  const user = db.users.find((u) => u.id === userId);
+  if (user) {
+    user.role = role === "admin" ? "admin" : null;
+    const player = db.players.find((p) => p.publicId === user.publicId);
+    if (player) {
+      player.currency = {
+        soft: parseInt(soft) || 0,
+        hard: parseInt(hard) || 0
+      };
+    }
+    await writeDB(db);
+  }
+
+  res.redirect("/api-backend/admin");
+});
+
+// Delete/Ban user
+app.post("/admin/delete", async (req, res) => {
+  const isAuthorized = await isAdminSession(req);
+  if (!isAuthorized) return res.status(403).send("Unauthorized");
+
+  const { userId } = req.body;
+  const db = await readDB();
+
+  const userIndex = db.users.findIndex((u) => u.id === userId);
+  if (userIndex !== -1) {
+    const user = db.users[userIndex];
+    db.users.splice(userIndex, 1);
+    
+    const playerIndex = db.players.findIndex((p) => p.publicId === user.publicId);
+    if (playerIndex !== -1) {
+      db.players.splice(playerIndex, 1);
+    }
+    
+    await writeDB(db);
+  }
+
+  res.redirect("/api-backend/admin");
 });
 
 app.listen(PORT, () => {

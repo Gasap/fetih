@@ -45,7 +45,7 @@
     "paste": "Yapıştır"
   },
   "main": {
-    "title": "OpenFront (ALFA)",
+    "title": "İmparatorluk (ALFA)",
     "join_discord": "Discord",
     "login_discord": "Discord'la giriş yap",
     "sign_in": "Oturum Aç",
@@ -62,7 +62,7 @@
     "wiki": "Wiki",
     "privacy_policy": "Gizlilik Politikası",
     "terms_of_service": "Hizmet Şartları",
-    "copyright": "© OpenFront™ ve Katkıda Bulunanlar",
+    "copyright": "© İmparatorluk™ ve Katkıda Bulunanlar",
     "reddit": "Reddit",
     "play": "Oyna",
     "news": "Haberler",
@@ -190,9 +190,9 @@
     "icon_alt_player_leaderboard": "Oyuncu Skor Tablosu Simgesi",
     "icon_alt_team_leaderboard": "Takım Skor Tablosu Simgesi",
     "option_speed": "Hız - Oyunun hızını ayarlayın. Herkese açık oyunlarda kullanılamaz.",
-    "troubleshooting_desc": "OpenFront'u oynarken performans sorunları, çökmeler veya başka sorunlarla karşılaşırsanız, genel sorunları teşhis etme ve düzeltme konusunda yardım almak için lütfen Sorun Giderme sayfamızı ziyaret edin:",
+    "troubleshooting_desc": "İmparatorluk'u oynarken performans sorunları, çökmeler veya başka sorunlarla karşılaşırsanız, genel sorunları teşhis etme ve düzeltme konusunda yardım almak için lütfen Sorun Giderme sayfamızı ziyaret edin:",
     "video_tutorial": "Video Eğitimi",
-    "video_tutorial_title": "OpenFront.io Eğitimi"
+    "video_tutorial_title": "İmparatorluk Eğitimi"
   },
   "single_modal": {
     "title": "Tekli",
@@ -876,7 +876,7 @@
     "warship_shift_hint": "Aynı anda birden fazla savaş gemisi seçmek için Shift tuşunu basılı tutun ve sürükleyin"
   },
   "win_modal": {
-    "support_openfront": "OpenFront'u Destekle!",
+    "support_openfront": "İmparatorluk'u Destekle!",
     "territory_pattern": "Bir toprak kaplaması alarak reklamlardan kurtul!",
     "died": "Öldün",
     "your_team": "Takımınız kazandı!",
@@ -888,7 +888,7 @@
     "keep": "Oynamaya Devam Et",
     "spectate": "İzle",
     "wishlist": "Steam'de İstek Listesine Ekle!",
-    "ofm_winter": "OpenFront Masters Kış Turnuvası!",
+    "ofm_winter": "İmparatorluk Masters Kış Turnuvası!",
     "ofm_winter_description": "Rekabetçi turnuvaya katıl ve en iyi oyunculara karşı mücadele et",
     "join_tournament": "Turnuvaya Katıl",
     "join_discord": "Discord Topluluğumuza Katıl!",
@@ -1230,7 +1230,7 @@
     "must_login": "Aşamalı eşleştirme oynamak için giriş yapmanız gerek."
   },
   "ios_banner": {
-    "text": "Tam ekran için OpenFront'u Ana Ekranınıza ekleyin",
+    "text": "Tam ekran için İmparatorluk'u Ana Ekranınıza ekleyin",
     "from": {
       "language": {
         "didYouMean": true,
