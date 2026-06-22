@@ -70,7 +70,7 @@ describe("ClientEnv", () => {
       instanceId: "x",
       gitCommit: "DEV",
     };
-    expect(ClientEnv.jwtIssuer()).toBe("http://localhost:8787");
+    expect(ClientEnv.jwtIssuer()).toBe("http://localhost:4000");
   });
 
   test("jwtIssuer derives api.<audience> for non-localhost", () => {

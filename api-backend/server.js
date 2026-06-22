@@ -1,15 +1,25 @@
+import crypto from "crypto";
+import dotenv from "dotenv";
 import express from "express";
 import fs from "fs/promises";
-import path from "path";
-import crypto from "crypto";
-import { fileURLToPath } from "url";
 import * as jose from "jose";
+import path from "path";
+import { fileURLToPath } from "url";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 4000;
+
+const DOMAIN = process.env.DOMAIN || "localhost";
+const JWT_ISSUER =
+  DOMAIN === "localhost"
+    ? "http://localhost:4000"
+    : `https://${DOMAIN}/api-backend`;
+const JWT_AUDIENCE = DOMAIN === "localhost" ? "localhost" : DOMAIN;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -29,9 +39,16 @@ app.use((req, res, next) => {
 
 // CORS headers
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
+  const origin = req.headers.origin || "*";
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS",
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, x-api-key",
+  );
   res.setHeader("Access-Control-Allow-Credentials", "true");
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
@@ -77,12 +94,18 @@ async function loadKeys() {
     console.log("Keys loaded successfully");
   } catch (e) {
     console.log("Generating new Ed25519 keypair...");
-    const { privateKey: priv, publicKey: pub } = await jose.generateKeyPair("Ed25519", { extractable: true });
+    const { privateKey: priv, publicKey: pub } = await jose.generateKeyPair(
+      "Ed25519",
+      { extractable: true },
+    );
     privateKey = priv;
     publicKey = pub;
     const privatePem = await jose.exportPKCS8(privateKey);
     const publicPem = await jose.exportSPKI(publicKey);
-    await fs.writeFile(keysPath, JSON.stringify({ privateKey: privatePem, publicKey: publicPem }, null, 2));
+    await fs.writeFile(
+      keysPath,
+      JSON.stringify({ privateKey: privatePem, publicKey: publicPem }, null, 2),
+    );
   }
 }
 await loadKeys();
@@ -228,7 +251,9 @@ app.get("/auth/login/discord", (req, res) => {
 
 // Alias for Google login
 app.get("/auth/login/google", (req, res) => {
-  res.redirect(`/api-backend/auth/login/discord?redirect_uri=${req.query.redirect_uri}`);
+  res.redirect(
+    `/api-backend/auth/login/discord?redirect_uri=${req.query.redirect_uri}`,
+  );
 });
 
 app.post("/auth/login/submit", async (req, res) => {
@@ -237,14 +262,18 @@ app.post("/auth/login/submit", async (req, res) => {
   const db = await readDB();
 
   if (action === "register") {
-    const existing = db.users.find((u) => u.username.toLowerCase() === username.toLowerCase());
+    const existing = db.users.find(
+      (u) => u.username.toLowerCase() === username.toLowerCase(),
+    );
     if (existing) {
-      return res.redirect(`/api-backend/auth/login/discord?error=exists&redirect_uri=${redirect_uri}`);
+      return res.redirect(
+        `/api-backend/auth/login/discord?error=exists&redirect_uri=${redirect_uri}`,
+      );
     }
 
     const userId = crypto.randomUUID();
     const publicId = crypto.randomUUID();
-    
+
     // Default to admin role if username is admin
     let role = null;
     if (username.toLowerCase() === "admin") {
@@ -257,7 +286,7 @@ app.post("/auth/login/submit", async (req, res) => {
       passwordHash: hashPassword(password),
       email: `${username.toLowerCase()}@imparatorluk.online`,
       publicId,
-      role
+      role,
     };
 
     const newPlayer = {
@@ -267,7 +296,7 @@ app.post("/auth/login/submit", async (req, res) => {
       achievements: { singleplayerMap: [] },
       friends: [],
       subscription: null,
-      currency: { soft: 1000, hard: 100 }
+      currency: { soft: 1000, hard: 100 },
     };
 
     db.users.push(newUser);
@@ -277,19 +306,27 @@ app.post("/auth/login/submit", async (req, res) => {
     // Create login token and redirect
     const loginToken = crypto.randomUUID();
     loginTokens.set(loginToken, newUser);
-    return res.redirect(`${decodedRedirectUri}#token-login?token-login=${loginToken}`);
+    return res.redirect(
+      `${decodedRedirectUri}#token-login?token-login=${loginToken}`,
+    );
   } else {
     // Login
     const user = db.users.find(
-      (u) => u.username.toLowerCase() === username.toLowerCase() && u.passwordHash === hashPassword(password)
+      (u) =>
+        u.username.toLowerCase() === username.toLowerCase() &&
+        u.passwordHash === hashPassword(password),
     );
     if (!user) {
-      return res.redirect(`/api-backend/auth/login/discord?error=invalid&redirect_uri=${redirect_uri}`);
+      return res.redirect(
+        `/api-backend/auth/login/discord?error=invalid&redirect_uri=${redirect_uri}`,
+      );
     }
 
     const loginToken = crypto.randomUUID();
     loginTokens.set(loginToken, user);
-    return res.redirect(`${decodedRedirectUri}#token-login?token-login=${loginToken}`);
+    return res.redirect(
+      `${decodedRedirectUri}#token-login?token-login=${loginToken}`,
+    );
   }
 });
 
@@ -304,7 +341,7 @@ app.get("/auth/login/token", async (req, res) => {
 
   res.setHeader(
     "Set-Cookie",
-    `refresh_token=${user.id}; Path=/api-backend; HttpOnly; Max-Age=2592000; SameSite=Lax`
+    `refresh_token=${user.id}; Path=/api-backend; HttpOnly; Max-Age=2592000; SameSite=Lax`,
   );
   res.json({ email: user.email });
 });
@@ -327,8 +364,8 @@ app.post("/auth/refresh", async (req, res) => {
     jti: crypto.randomUUID(),
     sub: uuidToBase64url(user.publicId),
     role: user.role,
-    iss: `https://imparatorluk.online/api-backend`,
-    aud: `imparatorluk.online`,
+    iss: JWT_ISSUER,
+    aud: JWT_AUDIENCE,
   })
     .setProtectedHeader({ alg: "EdDSA" })
     .setIssuedAt(now)
@@ -341,7 +378,7 @@ app.post("/auth/refresh", async (req, res) => {
 app.post("/auth/logout", (req, res) => {
   res.setHeader(
     "Set-Cookie",
-    `refresh_token=; Path=/api-backend; HttpOnly; Max-Age=0; SameSite=Lax`
+    `refresh_token=; Path=/api-backend; HttpOnly; Max-Age=0; SameSite=Lax`,
   );
   res.json({ success: true });
 });
@@ -360,12 +397,14 @@ app.get("/users/@me", async (req, res) => {
 
   try {
     const { payload } = await jose.jwtVerify(token, publicKey, {
-      issuer: `https://imparatorluk.online/api-backend`,
-      audience: `imparatorluk.online`,
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
     });
 
     const hex = jose.base64url.decode(payload.sub);
-    const bytesHex = Array.from(hex).map((b) => b.toString(16).padStart(2, "0")).join("");
+    const bytesHex = Array.from(hex)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
     const uuid = [
       bytesHex.slice(0, 8),
       bytesHex.slice(8, 12),
@@ -384,7 +423,7 @@ app.get("/users/@me", async (req, res) => {
 
     res.json({
       user: {
-        email: user.email
+        email: user.email,
       },
       player: {
         publicId: player.publicId,
@@ -395,8 +434,8 @@ app.get("/users/@me", async (req, res) => {
         subscription: player.subscription || null,
         currency: player.currency || { soft: 1000, hard: 100 },
         clans: [],
-        clanRequests: []
-      }
+        clanRequests: [],
+      },
     });
   } catch (e) {
     return res.status(401).json({ error: "Invalid token" });
@@ -407,7 +446,7 @@ app.get("/player/:playerId", async (req, res) => {
   const db = await readDB();
   const player = db.players.find((p) => p.publicId === req.params.playerId);
   const user = db.users.find((u) => u.publicId === req.params.playerId);
-  
+
   if (!player || !user) {
     return res.status(404).json({ error: "Player not found" });
   }
@@ -418,10 +457,10 @@ app.get("/player/:playerId", async (req, res) => {
       id: user.id,
       username: user.username,
       avatar: null,
-      discriminator: "0000"
+      discriminator: "0000",
     },
     games: [],
-    stats: {}
+    stats: {},
   });
 });
 
@@ -431,14 +470,14 @@ app.get("/news.json", (req, res) => {
       id: "news-1",
       title: "İmparatorluk Online Başladı!",
       description: "Sunucumuz başarıyla aktif edildi. Keyifli oyunlar!",
-      type: "announcement"
-    }
+      type: "announcement",
+    },
   ]);
 });
 
 app.get("/leaderboard/ranked", (req, res) => {
   res.json({
-    oneVone: []
+    oneVone: [],
   });
 });
 
@@ -446,11 +485,15 @@ app.get("/leaderboard/ranked", (req, res) => {
 app.get("/admin", async (req, res) => {
   const isAuthorized = await isAdminSession(req);
   if (!isAuthorized) {
-    return res.status(403).send("<h1>403 Forbidden - Bu panele yalnizca admin yetkisi olan hesaplar girebilir.</h1>");
+    return res
+      .status(403)
+      .send(
+        "<h1>403 Forbidden - Bu panele yalnizca admin yetkisi olan hesaplar girebilir.</h1>",
+      );
   }
 
   const db = await readDB();
-  
+
   let userRows = "";
   for (const user of db.users) {
     const player = db.players.find((p) => p.publicId === user.publicId) || {};
@@ -459,14 +502,14 @@ app.get("/admin", async (req, res) => {
     userRows += `
       <tr>
         <td>${user.username}</td>
-        <td>${user.role || 'user'}</td>
+        <td>${user.role || "user"}</td>
         <td>${soft} Altın / ${hard} Elmas</td>
         <td>
           <form style="display:inline" method="POST" action="/api-backend/admin/update">
             <input type="hidden" name="userId" value="${user.id}">
             <select name="role">
-              <option value="user" ${user.role !== 'admin' ? 'selected' : ''}>Kullanıcı</option>
-              <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+              <option value="user" ${user.role !== "admin" ? "selected" : ""}>Kullanıcı</option>
+              <option value="admin" ${user.role === "admin" ? "selected" : ""}>Admin</option>
             </select>
             <input type="number" name="soft" placeholder="Altın" style="width:70px; padding:4px;" value="${soft}">
             <input type="number" name="hard" placeholder="Elmas" style="width:70px; padding:4px;" value="${hard}">
@@ -579,7 +622,7 @@ app.post("/admin/update", async (req, res) => {
     if (player) {
       player.currency = {
         soft: parseInt(soft) || 0,
-        hard: parseInt(hard) || 0
+        hard: parseInt(hard) || 0,
       };
     }
     await writeDB(db);
@@ -600,12 +643,14 @@ app.post("/admin/delete", async (req, res) => {
   if (userIndex !== -1) {
     const user = db.users[userIndex];
     db.users.splice(userIndex, 1);
-    
-    const playerIndex = db.players.findIndex((p) => p.publicId === user.publicId);
+
+    const playerIndex = db.players.findIndex(
+      (p) => p.publicId === user.publicId,
+    );
     if (playerIndex !== -1) {
       db.players.splice(playerIndex, 1);
     }
-    
+
     await writeDB(db);
   }
 

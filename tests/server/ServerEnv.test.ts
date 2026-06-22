@@ -73,7 +73,7 @@ describe("ServerEnv.jwtIssuer", () => {
 
   test("maps 'localhost' to http://localhost:8787", () => {
     vi.stubEnv("DOMAIN", "localhost");
-    expect(ServerEnv.jwtIssuer()).toBe("http://localhost:8787");
+    expect(ServerEnv.jwtIssuer()).toBe("http://localhost:4000");
   });
 
   test("derives api.<audience> for non-localhost", () => {
