@@ -83,14 +83,18 @@ def main():
         print("WebSocket map blogu ekleniyor...")
         content = MAP_BLOCK + "\n" + content
 
-    # 2. api-backend ve worker yonlendirmelerini ekle
-    if "api-backend" in content or "location ~* ^/w" in content:
-        print("UYARI: api-backend veya wX yonlendirmeleri zaten mevcut! Eski olanlar temizleniyor...")
-        # Temizle (eski versiyonlari silelim ki ust uste binmesin)
-        content = re.sub(r"\s*# Custom Auth API backend.*?\n\s*}\n\s*# Admin panel.*?\n\s*}\n\s*# Worker locations.*?\n\s*}", "", content, flags=re.DOTALL)
-        content = re.sub(r"\s*location \^~ /api-backend/.*?\n\s*}", "", content, flags=re.DOTALL)
-        content = re.sub(r"\s*location \^~ /admin.*?\n\s*}", "", content, flags=re.DOTALL)
-        content = re.sub(r"\s*location ~\* \^/w.*?\n\s*}", "", content, flags=re.DOTALL)
+    # 2. Temizle (eski versiyonlari silelim ki ust uste binmesin)
+    print("Eski API ve Worker yönlendirmeleri temizleniyor...")
+    
+    # Herhangi bir sekilde api-backend, admin veya wX içeren location bloklarini siler
+    content = re.sub(r"\s*location\s+[^{]*?api-backend[^{]*?\{[^}]*?\}", "", content, flags=re.DOTALL)
+    content = re.sub(r"\s*location\s+[^{]*?admin[^{]*?\{[^}]*?\}", "", content, flags=re.DOTALL)
+    content = re.sub(r"\s*location\s+[^{]*?/w\(\\d\+\)[^{]*?\{[^}]*?\}", "", content, flags=re.DOTALL)
+    
+    # Eski yorum satirlarini temizle
+    content = re.sub(r"\s*# Custom Auth API backend.*?\n", "\n", content)
+    content = re.sub(r"\s*# Admin panel.*?\n", "\n", content)
+    content = re.sub(r"\s*# Worker locations.*?\n", "\n", content)
 
     # Simdi temizlenmis/yeni dosyaya blogu ekle
     # Ekleme noktasi: ilk listen 443 veya ssl_certificate içeren server blogunun baslangici
