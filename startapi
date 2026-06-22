@@ -1,5 +1,5 @@
 #!/bin/bash
-# startapi - Start the custom Auth & Profile API server under PM2 on port 3003
+# startapi - Start the custom Auth & Profile API server under PM2 on port 4000
 
 echo "=== 1. Starting api-backend/server.js under PM2 ==="
 pm2 stop openfront-api 2>/dev/null || true
