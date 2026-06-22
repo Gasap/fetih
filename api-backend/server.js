@@ -335,7 +335,7 @@ app.post("/auth/refresh", async (req, res) => {
     .setExpirationTime(now + 900) // 15 mins
     .sign(privateKey);
 
-  res.json({ token: jwt, expiresIn: 900 });
+  res.json({ jwt, expiresIn: 900 });
 });
 
 app.post("/auth/logout", (req, res) => {
