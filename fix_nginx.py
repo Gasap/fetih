@@ -10,7 +10,7 @@ NGINX_CONF = "/etc/nginx/sites-enabled/imparatorluk"
 API_BACKEND_BLOCK = """
     # Custom Auth API backend (JWT, login, admin) - Imparatorluk
     location ^~ /api-backend/ {
-        proxy_pass http://127.0.0.1:3003/;
+        proxy_pass http://127.0.0.1:4000/;
         proxy_http_version 1.1;
         proxy_cache off;
         add_header Cache-Control "no-store, no-cache, must-revalidate";
@@ -24,7 +24,7 @@ API_BACKEND_BLOCK = """
 
     # Admin panel
     location ^~ /admin {
-        proxy_pass http://127.0.0.1:3003/admin;
+        proxy_pass http://127.0.0.1:4000/admin;
         proxy_http_version 1.1;
         proxy_cache off;
         proxy_set_header Host $host;

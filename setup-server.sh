@@ -68,7 +68,7 @@ else
   /location = \/api\/health/ {
     print "    # Custom Auth API backend (JWT, login, admin)"
     print "    location ^~ /api-backend/ {"
-    print "        proxy_pass http://127.0.0.1:3003/;"
+    print "        proxy_pass http://127.0.0.1:4000/;"
     print "        proxy_http_version 1.1;"
     print "        proxy_cache off;"
     print "        add_header Cache-Control \"no-store, no-cache, must-revalidate\";"
@@ -82,7 +82,7 @@ else
     print ""
     print "    # Admin panel kisayolu"
     print "    location ^~ /admin {"
-    print "        proxy_pass http://127.0.0.1:3003/admin;"
+    print "        proxy_pass http://127.0.0.1:4000/admin;"
     print "        proxy_http_version 1.1;"
     print "        proxy_cache off;"
     print "        proxy_set_header Host $host;"
@@ -120,7 +120,7 @@ fi
 echo ""
 echo "[4/5] PM2 surecleri yeniden baslatiliyor..."
 
-# openfront-api (port 3003) - Custom API
+# openfront-api (port 4000) - Custom API
 if pm2 describe openfront-api > /dev/null 2>&1; then
   pm2 restart openfront-api
   echo "  openfront-api yeniden baslatildi."
@@ -157,7 +157,7 @@ pm2 status
 
 echo ""
 echo "  Port Kontrol:"
-ss -tlnp | grep -E "3000|3001|3002|3003" || true
+ss -tlnp | grep -E "3000|3001|3002|4000" || true
 
 echo ""
 echo "  Health Check:"
@@ -166,7 +166,7 @@ curl -s http://localhost:3000/api/health || echo "  UYARI: Health check basarisi
 
 echo ""
 echo "  JWKS Test (JWT dogrulamasi icin kritik!):"
-curl -s http://localhost:3003/.well-known/jwks.json | head -c 200 || echo "  UYARI: JWKS endpoint basarisiz!"
+curl -s http://localhost:4000/.well-known/jwks.json | head -c 200 || echo "  UYARI: JWKS endpoint basarisiz!"
 
 echo ""
 echo "========================================"
