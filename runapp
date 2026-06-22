@@ -59,9 +59,13 @@ if ! command -v pm2 &> /dev/null; then
 fi
 
 echo "=== 5. Starting/restarting application with PM2 ==="
+if [ -f .env ]; then
+    echo "Exporting .env variables..."
+    export $(grep -v '^#' .env | xargs)
+fi
 pm2 stop openfront 2>/dev/null || true
 pm2 delete openfront 2>/dev/null || true
-pm2 start "npm run start:server" --name "openfront"
+pm2 start "npm run start:server" --name "openfront" --update-env
 
 echo ""
 echo "============================================="
