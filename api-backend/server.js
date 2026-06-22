@@ -335,7 +335,7 @@ app.post("/auth/refresh", async (req, res) => {
     .setExpirationTime(now + 900) // 15 mins
     .sign(privateKey);
 
-  res.json({ jwt, expiresIn: 900 });
+  res.json({ token: jwt, expiresIn: 900 });
 });
 
 app.post("/auth/logout", (req, res) => {
@@ -384,17 +384,18 @@ app.get("/users/@me", async (req, res) => {
 
     res.json({
       user: {
-        email: user.email,
-        username: user.username
+        email: user.email
       },
       player: {
         publicId: player.publicId,
-        adfree: player.adfree,
+        adfree: player.adfree || false,
         flares: player.flares || [],
         achievements: player.achievements || { singleplayerMap: [] },
         friends: player.friends || [],
-        subscription: player.subscription,
-        currency: player.currency || { soft: 1000, hard: 100 }
+        subscription: player.subscription || null,
+        currency: player.currency || { soft: 1000, hard: 100 },
+        clans: [],
+        clanRequests: []
       }
     });
   } catch (e) {
