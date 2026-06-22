@@ -477,7 +477,7 @@ export async function startWorker() {
           generateID(),
           persistentId,
           claims,
-          claims?.role ?? null,
+          (ServerEnv.env() === GameEnv.Dev && (censoredUsername === "admin" || censoredUsername.toLowerCase().includes("[admin]"))) ? "admin" : (claims?.role ?? null),
           flares,
           ip,
           censoredUsername,

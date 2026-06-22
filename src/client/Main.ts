@@ -819,7 +819,13 @@ class Client {
       this.updateJoinUrlForShare(lobby.gameID);
     }
     const auth = await userAuth();
-    const playerRole = auth !== false ? (auth.claims.role ?? null) : null;
+    let playerRole = auth !== false ? (auth.claims.role ?? null) : null;
+    if (ClientEnv.env() === GameEnv.Dev) {
+      const username = this.usernameInput?.getUsername() ?? "";
+      if (username === "admin" || username.toLowerCase().includes("[admin]")) {
+        playerRole = "admin";
+      }
+    }
     const newLobbyHandle = joinLobby(this.eventBus, {
       gameID: lobby.gameID,
       cosmetics: await getPlayerCosmeticsRefs(),
