@@ -1,0 +1,72 @@
+#!/bin/bash
+# runapp - Install dependencies, build frontend, and run the game server in production using GAME_ENV=dev
+
+set -e
+
+echo "=== 1. Dependencies are being installed ==="
+npm install --include=dev
+
+echo "=== 2. Frontend assets are being compiled ==="
+npm run build-prod
+
+echo "=== 3. Configuring environment variables ==="
+# Generate git commit hash if available
+GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "deploy")
+
+if [ ! -f .env ]; then
+    echo "Creating new .env file"
+    cat > .env << EOF
+GAME_ENV=dev
+NUM_WORKERS=2
+TURNSTILE_SITE_KEY=1x00000000000000000000AA
+DOMAIN=imparatorluk.online
+GIT_COMMIT=$GIT_HASH
+EOF
+else
+    echo "Updating existing .env file"
+    # Ensure DOMAIN and GAME_ENV are set correctly
+    if grep -q "DOMAIN=" .env; then
+        sed -i 's/DOMAIN=.*/DOMAIN=imparatorluk.online/' .env
+    else
+        echo "DOMAIN=imparatorluk.online" >> .env
+    fi
+    if grep -q "GAME_ENV=" .env; then
+        sed -i 's/GAME_ENV=.*/GAME_ENV=dev/' .env
+    else
+        echo "GAME_ENV=dev" >> .env
+    fi
+    if grep -q "NUM_WORKERS=" .env; then
+        sed -i 's/NUM_WORKERS=.*/NUM_WORKERS=2/' .env
+    else
+        echo "NUM_WORKERS=2" >> .env
+    fi
+    if grep -q "TURNSTILE_SITE_KEY=" .env; then
+        sed -i 's/TURNSTILE_SITE_KEY=.*/TURNSTILE_SITE_KEY=1x00000000000000000000AA/' .env
+    else
+        echo "TURNSTILE_SITE_KEY=1x00000000000000000000AA" >> .env
+    fi
+    if grep -q "GIT_COMMIT=" .env; then
+        sed -i "s/GIT_COMMIT=.*/GIT_COMMIT=$GIT_HASH/" .env
+    else
+        echo "GIT_COMMIT=$GIT_HASH" >> .env
+    fi
+fi
+
+echo "=== 4. Setting up PM2 process manager === "
+if ! command -v pm2 &> /dev/null; then
+    echo "Installing PM2 globally..."
+    npm install -g pm2
+fi
+
+echo "=== 5. Starting/restarting application with PM2 ==="
+pm2 stop openfront 2>/dev/null || true
+pm2 delete openfront 2>/dev/null || true
+pm2 start "npm run start:server" --name "openfront"
+
+echo ""
+echo "============================================="
+echo "BASARIYLA TAMAMLANDI!"
+echo "Uygulama PM2 altinda port 3000 uzerinde calisiyor."
+echo "Durumu kontrol etmek icin: pm2 status"
+echo "Loglari gormek icin: pm2 logs openfront"
+echo "============================================="
