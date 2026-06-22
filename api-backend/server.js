@@ -77,7 +77,7 @@ async function loadKeys() {
     console.log("Keys loaded successfully");
   } catch (e) {
     console.log("Generating new Ed25519 keypair...");
-    const { privateKey: priv, publicKey: pub } = await jose.generateKeyPair("Ed25519");
+    const { privateKey: priv, publicKey: pub } = await jose.generateKeyPair("Ed25519", { extractable: true });
     privateKey = priv;
     publicKey = pub;
     const privatePem = await jose.exportPKCS8(privateKey);
