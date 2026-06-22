@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "SSL sertifikasi alinmaya calisiliyor..."
+certbot --nginx -d imparatorluk.online -d www.imparatorluk.online --non-interactive --agree-tos --email olgunuysal42@gmail.com
+echo "Islem tamamlandi."
