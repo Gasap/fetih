@@ -5,7 +5,7 @@ Kullanim: python3 /var/www/imparatorluk/fix_nginx.py
 """
 import re, shutil, os, subprocess, datetime
 
-NGINX_CONF = "/etc/nginx/nginx.conf"
+NGINX_CONF = "/etc/nginx/sites-enabled/imparatorluk"
 
 API_BACKEND_BLOCK = """
     # Custom Auth API backend (JWT, login, admin) - Imparatorluk
