@@ -72,7 +72,7 @@ export class ClientEnv {
     const audience = ClientEnv.jwtAudience();
     return audience === "localhost"
       ? "http://localhost:8787"
-      : `https://api.${audience}`;
+      : `https://${audience}/api-backend`;
   }
   static async jwkPublicKey(): Promise<JWK> {
     if (ClientEnv.publicKey) return ClientEnv.publicKey;

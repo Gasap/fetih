@@ -273,7 +273,7 @@ export function getApiBase() {
     return localStorage.getItem("apiHost") ?? "http://localhost:8787";
   }
 
-  return `https://api.${domainname}`;
+  return `https://${domainname}/api-backend`;
 }
 
 export function getAudience() {

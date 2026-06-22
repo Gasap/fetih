@@ -1,0 +1,14 @@
+#!/bin/bash
+# startapi - Start the custom Auth & Profile API server under PM2 on port 3003
+
+echo "=== 1. Starting api-backend/server.js under PM2 ==="
+pm2 stop openfront-api 2>/dev/null || true
+pm2 delete openfront-api 2>/dev/null || true
+pm2 start api-backend/server.js --name "openfront-api"
+
+echo ""
+echo "============================================="
+echo "API SUNUCUSU BASARIYLA BASLATILDI!"
+echo "Durumu kontrol etmek icin: pm2 status"
+echo "Loglari gormek icin: pm2 logs openfront-api"
+echo "============================================="
