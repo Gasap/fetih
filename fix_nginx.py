@@ -43,7 +43,7 @@ API_AND_WORKERS_BLOCK = """
     }
 
     # Worker locations - Game Servers & WebSockets
-    location ~* ^/w(\d+)(/.*)?$ {
+    location ~* ^/w(\\d+)(/.*)?$ {
         set $worker $1;
         set $worker_port 3001;
         
@@ -78,10 +78,6 @@ def main():
     with open(NGINX_CONF, "r") as f:
         content = f.read()
 
-    print("================ CURRENT NGINX CONFIG ================")
-    print(content)
-    print("======================================================")
-
     # 1. Map blogunu ekle (eger yoksa)
     if "connection_upgrade" not in content:
         print("WebSocket map blogu ekleniyor...")
@@ -98,13 +94,13 @@ def main():
 
     # Simdi temizlenmis/yeni dosyaya blogu ekle
     # Ekleme noktasi: ilk listen 443 veya ssl_certificate içeren server blogunun baslangici
-    pattern = r"(server\s*\{[^}]+?listen\s+443 ssl)"
-    if re.search(pattern, content):
-        # listen 443 ssl satırının hemen altına ekle
-        new_content = re.sub(r"(listen\s+443 ssl.*?;\n)", r"\1" + API_AND_WORKERS_BLOCK, content, count=1)
+    match = re.search(r"listen\s+443 ssl.*?;\n", content)
+    if match:
+        idx = match.end()
+        new_content = content[:idx] + API_AND_WORKERS_BLOCK + content[idx:]
     else:
         # Fallback: ilk server blogunun en basina ekle
-        new_content = re.sub(r"(server\s*\{)", r"\1" + API_AND_WORKERS_BLOCK, content, count=1)
+        new_content = content.replace("server {", "server {" + API_AND_WORKERS_BLOCK, 1)
 
     # Yedek al
     backup_path = f"{NGINX_CONF}.backup.{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
