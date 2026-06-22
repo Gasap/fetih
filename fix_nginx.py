@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """
-fix_nginx.py - Nginx'e /api-backend/ route ekler
-Kullanim: python3 /var/www/imparatorluk/fix_nginx.py
+fix_nginx.py - Nginx ayarlarini otomatik gunceller (API ve WebSoket Yonlendirmeleri)
+Kullanim: python3 fix_nginx.py
 """
 import re, shutil, os, subprocess, datetime
 
 NGINX_CONF = "/etc/nginx/sites-enabled/imparatorluk"
 
-API_BACKEND_BLOCK = """
+MAP_BLOCK = """# WebSocket settings
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+"""
+
+API_AND_WORKERS_BLOCK = """
     # Custom Auth API backend (JWT, login, admin) - Imparatorluk
     location ^~ /api-backend/ {
         proxy_pass http://127.0.0.1:4000/;
@@ -34,6 +41,33 @@ API_BACKEND_BLOCK = """
         proxy_buffer_size 32k;
         proxy_buffers 4 32k;
     }
+
+    # Worker locations - Game Servers & WebSockets
+    location ~* ^/w(\d+)(/.*)?$ {
+        set $worker $1;
+        set $worker_port 3001;
+        
+        if ($worker = "0") { set $worker_port 3001; }
+        if ($worker = "1") { set $worker_port 3002; }
+        if ($worker = "2") { set $worker_port 3003; }
+        if ($worker = "3") { set $worker_port 3004; }
+        if ($worker = "4") { set $worker_port 3005; }
+        if ($worker = "5") { set $worker_port 3006; }
+        if ($worker = "6") { set $worker_port 3007; }
+        if ($worker = "7") { set $worker_port 3008; }
+        if ($worker = "8") { set $worker_port 3009; }
+        if ($worker = "9") { set $worker_port 3010; }
+        
+        # Preserve query string
+        proxy_pass http://127.0.0.1:$worker_port$2$is_args$args;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 """
 
 def main():
@@ -44,34 +78,43 @@ def main():
     with open(NGINX_CONF, "r") as f:
         content = f.read()
 
-    if "api-backend" in content:
-        print("api-backend zaten mevcut, islem yapilmadi.")
-        return
+    print("================ CURRENT NGINX CONFIG ================")
+    print(content)
+    print("======================================================")
+
+    # 1. Map blogunu ekle (eger yoksa)
+    if "connection_upgrade" not in content:
+        print("WebSocket map blogu ekleniyor...")
+        content = MAP_BLOCK + "\n" + content
+
+    # 2. api-backend ve worker yonlendirmelerini ekle
+    if "api-backend" in content or "location ~* ^/w" in content:
+        print("UYARI: api-backend veya wX yonlendirmeleri zaten mevcut! Eski olanlar temizleniyor...")
+        # Temizle (eski versiyonlari silelim ki ust uste binmesin)
+        content = re.sub(r"\s*# Custom Auth API backend.*?\n\s*}\n\s*# Admin panel.*?\n\s*}\n\s*# Worker locations.*?\n\s*}", "", content, flags=re.DOTALL)
+        content = re.sub(r"\s*location \^~ /api-backend/.*?\n\s*}", "", content, flags=re.DOTALL)
+        content = re.sub(r"\s*location \^~ /admin.*?\n\s*}", "", content, flags=re.DOTALL)
+        content = re.sub(r"\s*location ~\* \^/w.*?\n\s*}", "", content, flags=re.DOTALL)
+
+    # Simdi temizlenmis/yeni dosyaya blogu ekle
+    # Ekleme noktasi: ilk listen 443 veya ssl_certificate içeren server blogunun baslangici
+    pattern = r"(server\s*\{[^}]+?listen\s+443 ssl)"
+    if re.search(pattern, content):
+        # listen 443 ssl satırının hemen altına ekle
+        new_content = re.sub(r"(listen\s+443 ssl.*?;\n)", r"\1" + API_AND_WORKERS_BLOCK, content, count=1)
+    else:
+        # Fallback: ilk server blogunun en basina ekle
+        new_content = re.sub(r"(server\s*\{)", r"\1" + API_AND_WORKERS_BLOCK, content, count=1)
 
     # Yedek al
     backup_path = f"{NGINX_CONF}.backup.{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
     shutil.copy2(NGINX_CONF, backup_path)
     print(f"Yedek alindi: {backup_path}")
 
-    # /api/health blogunun hemen oncesine ekle
-    pattern = r"([ \t]*location\s*=\s*/api/health)"
-    replacement = API_BACKEND_BLOCK + r"\1"
-    new_content = re.sub(pattern, replacement, content, count=1)
-
-    if new_content == content:
-        # Fallback: ilk server {} blogunun icine en basa ekle
-        pattern2 = r"(server\s*\{)"
-        replacement2 = r"\1" + "\n" + API_BACKEND_BLOCK
-        new_content = re.sub(pattern2, replacement2, content, count=1)
-
-    if new_content == content:
-        print("HATA: Ekleme noktasi bulunamadi. Manuel ekleme gerekiyor.")
-        return
-
     with open(NGINX_CONF, "w") as f:
         f.write(new_content)
 
-    print("api-backend blogu eklendi!")
+    print("Yeni Nginx kuralları başarıyla eklendi/güncellendi!")
 
     # Test
     result = subprocess.run(["nginx", "-t"], capture_output=True, text=True)
@@ -79,9 +122,9 @@ def main():
     print(result.stderr)
 
     if result.returncode == 0:
-        print("Nginx config OK! Reload ediliyor...")
+        print("Nginx syntax OK! Reload ediliyor...")
         subprocess.run(["systemctl", "reload", "nginx"])
-        print("Nginx reload edildi!")
+        print("Nginx reload edildi ve yeni kurallar aktif!")
     else:
         print("HATA: Nginx config hatali! Yedekten geri yukleniyor...")
         shutil.copy2(backup_path, NGINX_CONF)
