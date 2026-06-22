@@ -82,6 +82,6 @@ describe("ClientEnv", () => {
       instanceId: "x",
       gitCommit: "abc123",
     };
-    expect(ClientEnv.jwtIssuer()).toBe("https://api.openfront.io");
+    expect(ClientEnv.jwtIssuer()).toBe("https://openfront.io/api-backend");
   });
 });

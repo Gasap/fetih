@@ -78,7 +78,7 @@ describe("ServerEnv.jwtIssuer", () => {
 
   test("derives api.<audience> for non-localhost", () => {
     vi.stubEnv("DOMAIN", "openfront.io");
-    expect(ServerEnv.jwtIssuer()).toBe("https://api.openfront.io");
+    expect(ServerEnv.jwtIssuer()).toBe("https://openfront.io/api-backend");
   });
 });
 

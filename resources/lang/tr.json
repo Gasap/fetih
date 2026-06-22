@@ -974,8 +974,8 @@
     "captured_enemy_unit": "{name}'den {unit} ele geçirildi",
     "unit_destroyed": "{unit} yok edildi",
     "no_boats_available": "Bot mevcut değil, maks {max}",
-    "alliance_nukes_destroyed_incoming": "{count, plural, bir {{name} tarafından fırlatılan# nükleer silah ittifak nedeniyle imha edildi} diğer {{name} tarafından fırlatılan# nükleer silah ittifak nedeniyle imha edildi}}",
-    "alliance_nukes_destroyed_outgoing": "{count, plural, bir {{name} yönünde fırlatılan # nükleer silah ittifak nedeniyle imha edildi} diğer {{name} yönünde fırlatılan# nükleer silah ittifak nedeniyle imha edildi}}",
+    "alliance_nukes_destroyed_incoming": "{count, plural, one {{name} tarafından fırlatılan # nükleer silah ittifak nedeniyle imha edildi} other {{name} tarafından fırlatılan # nükleer silah ittifak nedeniyle imha edildi}}",
+    "alliance_nukes_destroyed_outgoing": "{count, plural, one {{name} yönünde fırlatılan # nükleer silah ittifak nedeniyle imha edildi} other {{name} yönünde fırlatılan # nükleer silah ittifak nedeniyle imha edildi}}",
     "alliance_request_sent": "{name} adlı kişiye ittifak isteği gönderildi.",
     "atom_bomb_detonated": "{name} - atom bombası patlatıldı",
     "conquered_no_gold": "{name} fethedildi (oynamadı, altın verilmedi)",
@@ -1230,103 +1230,16 @@
     "must_login": "Aşamalı eşleştirme oynamak için giriş yapmanız gerek."
   },
   "ios_banner": {
-    "text": "Tam ekran için İmparatorluk'u Ana Ekranınıza ekleyin",
-    "from": {
-      "language": {
-        "didYouMean": true,
-        "iso": "en"
-      },
-      "text": {
-        "autoCorrected": false,
-        "value": "",
-        "didYouMean": false
-      }
-    },
-    "raw": [
-      [
-        null,
-        null,
-        "en",
-        [
-          [
-            [
-              0,
-              [
-                [
-                  [
-                    null,
-                    49
-                  ]
-                ],
-                [
-                  true
-                ]
-              ]
-            ]
-          ],
-          49
-        ],
-        null,
-        null,
-        [
-          "For fullscreen, add OpenFront to your Home Screen",
-          "auto",
-          "tr"
-        ]
-      ],
-      [
-        [
-          [
-            null,
-            null,
-            null,
-            null,
-            null,
-            [
-              [
-                "Tam ekran için OpenFront'u Ana Ekranınıza ekleyin",
-                null,
-                null,
-                null,
-                null,
-                null,
-                "For fullscreen, add OpenFront to your Home Screen",
-                1
-              ]
-            ],
-            null,
-            null,
-            null,
-            []
-          ]
-        ],
-        "tr",
-        1,
-        "en",
-        [
-          "For fullscreen, add OpenFront to your Home Screen",
-          "auto",
-          "tr"
-        ]
-      ],
-      "en",
-      null,
-      null,
-      null,
-      null,
-      [
-        [
-          [
-            0
-          ],
-          [
-            [
-              6,
-              1
-            ]
-          ]
-        ]
-      ]
-    ]
+    "got_it": "Anladım",
+    "how": "Nasıl",
+    "later": "Daha Sonra",
+    "modal_desc": "Tarayıcınız tam ekran modunu desteklemiyor, ancak sürükleyici bir deneyim için İmparatorluk'u Ana Ekranınıza ekleyebilirsiniz:",
+    "modal_title": "iOS'ta Tam Ekran",
+    "never": "Asla",
+    "step_add_to_home_label": "Ana Ekrana Ekle",
+    "step_open": "Ana Ekranınızdan açın — adres çubuğu olmadan tam ekran olarak başlar",
+    "step_scroll_and_tap": "Aşağı kaydırın ve dokunun",
+    "step_share": "Tarayıcınızdaki Paylaş düğmesine dokunun",
+    "text": "Tam ekran için İmparatorluk'u Ana Ekranınıza ekleyin"
   }
 }

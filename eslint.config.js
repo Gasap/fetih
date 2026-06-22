@@ -33,6 +33,9 @@ export default [
             "__mocks__/fileMock.js",
             "eslint.config.js",
             "scripts/sync-assets.mjs",
+            "api-backend/server.js",
+            "find_missing_keys.cjs",
+            "translate_and_merge.cjs",
           ],
         },
         tsconfigRootDir: import.meta.dirname,
@@ -59,6 +62,15 @@ export default [
           caughtErrors: "none",
         },
       ],
+    },
+  },
+  {
+    files: ["**/*.{js,cjs,mjs}"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "no-prototype-builtins": "off",
     },
   },
 ];

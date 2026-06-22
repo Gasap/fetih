@@ -1,6 +1,5 @@
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
-import { assetUrl } from "../../core/AssetUrls";
 
 @customElement("page-footer")
 export class Footer extends LitElement {
@@ -38,7 +37,8 @@ export class Footer extends LitElement {
           ></a>
         </div>
         <div class="text-xs mt-1 text-white/30 text-center px-4">
-          İmparatorluk — Tüm sorumluluk ve yönetim <strong class="text-white/50">Olgun Uysal</strong>'a aittir.
+          İmparatorluk — Tüm sorumluluk ve yönetim
+          <strong class="text-white/50">Olgun Uysal</strong>'a aittir.
         </div>
       </footer>
     `;

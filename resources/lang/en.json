@@ -813,7 +813,6 @@
     "create": "Create Lobby",
     "discord_avatar_alt": "Discord profile avatar",
     "game_info": "Game info",
-    "github": "GitHub",
     "go_to_troubleshooting": "Go to our troubleshooting page",
     "help": "Help",
     "join": "Join Lobby",
@@ -831,8 +830,7 @@
     "terms_of_service": "Terms of Service",
     "title": "OpenFront (ALPHA)",
     "troubleshooting": "Troubleshooting",
-    "user_avatar_alt": "{username}'s avatar",
-    "wiki": "Wiki"
+    "user_avatar_alt": "{username}'s avatar"
   },
   "map": {
     "achiran": "Achiran",
