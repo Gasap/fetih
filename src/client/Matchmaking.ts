@@ -70,8 +70,11 @@ export class MatchmakingModal extends BaseModal {
   }
 
   private async connect() {
+    const wsBase = ClientEnv.jwtIssuer()
+      .replace(/^http:/, "ws:")
+      .replace(/^https:/, "wss:");
     this.socket = new WebSocket(
-      `${ClientEnv.jwtIssuer()}/matchmaking/join?instance_id=${encodeURIComponent(ClientEnv.instanceId())}`,
+      `${wsBase}/matchmaking/join?instance_id=${encodeURIComponent(ClientEnv.instanceId())}`,
     );
     this.socket.onopen = async () => {
       console.log("Connected to matchmaking server");

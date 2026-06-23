@@ -2,9 +2,11 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import express from "express";
 import fs from "fs/promises";
+import http from "http";
 import * as jose from "jose";
 import path from "path";
 import { fileURLToPath } from "url";
+import { WebSocketServer } from "ws";
 
 dotenv.config();
 
@@ -12,6 +14,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ noServer: true });
 const PORT = 4000;
 
 const DOMAIN = process.env.DOMAIN || "localhost";
@@ -657,6 +661,135 @@ app.post("/admin/delete", async (req, res) => {
   res.redirect("/api-backend/admin");
 });
 
-app.listen(PORT, () => {
+// Matchmaking state
+const workers = new Map(); // workerId => { gameId, ccu, lastCheckin }
+const matchmakingQueue = []; // list of { ws, user, publicId }
+const activeMatches = new Map(); // gameId => { player1, player2 }
+
+app.post("/matchmaking/checkin", (req, res) => {
+  const { id, gameId, ccu, instanceId } = req.body;
+
+  // Register/update worker checkin
+  workers.set(id, { gameId, ccu, lastCheckin: Date.now() });
+
+  // Check if there is an active match assigned to this gameId
+  if (activeMatches.has(gameId)) {
+    activeMatches.delete(gameId);
+    return res.json({ assignment: true });
+  }
+
+  res.json({ assignment: false });
+});
+
+// Matchmaking WebSocket connection handler
+wss.on("connection", (ws, req) => {
+  let playerInfo = null;
+
+  ws.on("message", async (message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      if (data.type === "join") {
+        const token = data.jwt;
+        // Verify token
+        const { payload } = await jose.jwtVerify(token, publicKey, {
+          issuer: JWT_ISSUER,
+          audience: JWT_AUDIENCE,
+        });
+
+        const hex = jose.base64url.decode(payload.sub);
+        const bytesHex = Array.from(hex)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        const uuid = [
+          bytesHex.slice(0, 8),
+          bytesHex.slice(8, 12),
+          bytesHex.slice(12, 16),
+          bytesHex.slice(16, 20),
+          bytesHex.slice(20),
+        ].join("-");
+
+        const db = await readDB();
+        const user = db.users.find((u) => u.publicId === uuid);
+
+        if (!user) {
+          ws.close(1008, "User not found");
+          return;
+        }
+
+        playerInfo = { ws, user, publicId: uuid };
+
+        // Add to queue if not already in queue
+        if (!matchmakingQueue.some((p) => p.publicId === uuid)) {
+          matchmakingQueue.push(playerInfo);
+        }
+
+        // Try to match players
+        if (matchmakingQueue.length >= 2) {
+          // Get two players
+          const p1 = matchmakingQueue.shift();
+          const p2 = matchmakingQueue.shift();
+
+          // Find an active worker
+          const now = Date.now();
+          let bestWorker = null;
+          for (const [wid, wdata] of workers.entries()) {
+            // Check if worker checked in in the last 15 seconds
+            if (now - wdata.lastCheckin < 15000) {
+              if (!bestWorker || wdata.ccu < bestWorker.ccu) {
+                bestWorker = { id: wid, ...wdata };
+              }
+            }
+          }
+
+          if (bestWorker) {
+            const assignedGameId = bestWorker.gameId;
+            activeMatches.set(assignedGameId, { p1, p2 });
+
+            const matchMsg = JSON.stringify({
+              type: "match-assignment",
+              gameId: assignedGameId,
+            });
+
+            p1.ws.send(matchMsg);
+            p2.ws.send(matchMsg);
+          } else {
+            // Put them back in queue
+            matchmakingQueue.unshift(p2);
+            matchmakingQueue.unshift(p1);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Matchmaking socket error:", e);
+      ws.close(1011, "Internal error");
+    }
+  });
+
+  ws.on("close", () => {
+    if (playerInfo) {
+      const idx = matchmakingQueue.findIndex(
+        (p) => p.publicId === playerInfo.publicId,
+      );
+      if (idx !== -1) {
+        matchmakingQueue.splice(idx, 1);
+      }
+    }
+  });
+});
+
+// Upgrade WebSocket connections
+server.on("upgrade", (request, socket, head) => {
+  const pathname = new URL(request.url, `http://${request.headers.host}`)
+    .pathname;
+  if (pathname === "/matchmaking/join") {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit("connection", ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
+
+server.listen(PORT, () => {
   console.log(`API Backend Server running on port ${PORT}`);
 });
