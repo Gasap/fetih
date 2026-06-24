@@ -1,15 +1,15 @@
 services:
-  imparatorluk:
+  imparatorluk-test:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         GIT_COMMIT: ${GIT_COMMIT:-dev}
-    image: imparatorluk:latest
-    container_name: imparatorluk
+    image: imparatorluk-test:latest
+    container_name: imparatorluk-test
     restart: always
     ports:
-      - "127.0.0.1:8080:80"
+      - "127.0.0.1:8090:80"
     environment:
       - GAME_ENV=prod
       - DOMAIN=${DOMAIN}
