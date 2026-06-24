@@ -664,3 +664,14 @@ news-button .active button::after {
 .remove-player-btn:hover {
   background: #ff6666;
 }
+
+/* Custom UI Hides for a Clean Strategy Landing Page */
+desktop-nav-bar,
+mobile-nav-bar,
+#sidebar-menu,
+#mobile-menu-backdrop,
+#hamburger-btn,
+page-footer,
+.no-crazygames {
+  display: none !important;
+}

@@ -1,7 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
-import "./NewsBox";
 
 @customElement("play-page")
 export class PlayPage extends LitElement {
@@ -13,108 +12,85 @@ export class PlayPage extends LitElement {
     return html`
       <div
         id="page-play"
-        class="flex flex-col gap-2 w-full px-0 lg:px-4 min-h-0"
+        class="flex flex-col items-center justify-center min-h-[80vh] w-full px-4 lg:px-0 gap-6 select-none"
       >
         <token-login class="absolute"></token-login>
 
-        <!-- Mobile: Fixed top bar -->
+        <!-- Premium Strategy Game Hub Card -->
         <div
-          class="lg:hidden fixed left-0 right-0 top-0 z-40 pt-[env(safe-area-inset-top)] bg-surface border-b border-white/10"
+          class="w-full max-w-lg bg-zinc-950/80 backdrop-blur-xl border border-zinc-800/80 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_30px_rgba(234,179,8,0.05)] p-8 flex flex-col gap-6 transition-all duration-300 hover:border-amber-500/20"
         >
-          <div
-            class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center h-14 px-2 gap-2"
-          >
-            <button
-              id="hamburger-btn"
-              class="col-start-1 justify-self-start h-10 shrink-0 aspect-[4/3] flex text-white/90 rounded-md items-center justify-center transition-colors"
-              data-i18n-aria-label="main.menu"
-              aria-expanded="false"
-              aria-controls="sidebar-menu"
-              aria-haspopup="dialog"
-              data-i18n-title="main.menu"
+          <!-- Logo & Title Section -->
+          <div class="flex flex-col items-center gap-3">
+            <img
+              src=${assetUrl("images/OpenFrontLogo.svg")}
+              alt="Fetih Online"
+              class="h-16 w-auto drop-shadow-[0_0_10px_rgba(0,132,209,0.3)]"
+            />
+            <h1
+              class="text-3xl font-black text-center tracking-widest bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent uppercase drop-shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+              style="font-family: 'OpenFront', sans-serif;"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="size-8"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                />
-              </svg>
-            </button>
-
-            <div
-              class="col-start-2 flex items-center justify-center text-malibu-blue min-w-0"
+              Fetih Online
+            </h1>
+            <p
+              class="text-xs text-zinc-500 tracking-wider uppercase font-semibold"
             >
-              <img
-                src=${assetUrl("images/OpenFrontLogo.svg")}
-                alt="OpenFront"
-                class="h-full w-auto"
-              />
-            </div>
-
-            <div
-              aria-hidden="true"
-              class="col-start-3 justify-self-end h-10 shrink-0 aspect-[4/3]"
-            ></div>
+              Cihan Hâkimiyeti Mücadelesi
+            </p>
           </div>
-        </div>
 
-        <div
-          class="w-full pb-4 lg:pb-0 flex flex-col gap-4 sm:-mx-4 sm:w-[calc(100%+2rem)] lg:mx-0 lg:w-full lg:grid lg:grid-cols-[2fr_1fr] lg:gap-4"
-        >
-          <!-- Mobile: spacer for fixed top bar -->
+          <!-- Divider -->
           <div
-            class="lg:hidden h-[calc(env(safe-area-inset-top)+56px)] lg:col-span-2 -mb-4"
+            class="h-px w-full bg-gradient-to-r from-transparent via-zinc-800 to-transparent"
           ></div>
 
-          <!-- News box above username -->
-          <news-box class="lg:col-span-2"></news-box>
+          <!-- Play Configuration (Username, Skin, Flag) -->
+          <div class="flex flex-col gap-4">
+            <!-- Username Input -->
+            <div class="flex flex-col gap-2">
+              <label
+                class="text-xs font-bold text-zinc-400 uppercase tracking-widest"
+                >Kullanıcı Adı</label
+              >
+              <username-input class="w-full h-12"></username-input>
+            </div>
 
-          <!-- Username: left col -->
-          <div
-            class="px-2 py-2 bg-surface border-y border-white/10 overflow-visible lg:flex lg:items-center lg:gap-x-2 lg:h-[60px] lg:p-3 lg:relative lg:z-20 lg:border-y-0 lg:rounded-xl"
-          >
-            <div class="flex items-center gap-2 min-w-0 w-full">
-              <username-input
-                class="flex-1 min-w-0 h-10 lg:h-[50px]"
-              ></username-input>
-              <pattern-input
-                id="pattern-input-mobile"
-                show-select-label
-                adaptive-size
-                class="shrink-0 lg:hidden"
-              ></pattern-input>
-              <flag-input
-                id="flag-input-mobile"
-                show-select-label
-                class="shrink-0 lg:hidden h-10 w-10"
-              ></flag-input>
+            <!-- Customization Row (Skin & Flag) -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-2">
+                <label
+                  class="text-xs font-bold text-zinc-400 uppercase tracking-widest"
+                  >Görünüm (Skin)</label
+                >
+                <pattern-input
+                  id="pattern-input-desktop"
+                  show-select-label
+                  class="w-full h-12"
+                ></pattern-input>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label
+                  class="text-xs font-bold text-zinc-400 uppercase tracking-widest"
+                  >Bayrak</label
+                >
+                <flag-input
+                  id="flag-input-desktop"
+                  show-select-label
+                  class="w-full h-12"
+                ></flag-input>
+              </div>
             </div>
           </div>
 
-          <!-- Skin + flag: right col -->
-          <div class="hidden lg:flex h-[60px] gap-2">
-            <pattern-input
-              id="pattern-input-desktop"
-              show-select-label
-              class="flex-1 h-full"
-            ></pattern-input>
-            <flag-input
-              id="flag-input-desktop"
-              show-select-label
-              class="flex-1 h-full"
-            ></flag-input>
-          </div>
-        </div>
+          <!-- Divider -->
+          <div
+            class="h-px w-full bg-gradient-to-r from-transparent via-zinc-800 to-transparent"
+          ></div>
 
-        <game-mode-selector></game-mode-selector>
+          <!-- Game Modes & Play Button -->
+          <game-mode-selector class="w-full"></game-mode-selector>
+        </div>
       </div>
     `;
   }
