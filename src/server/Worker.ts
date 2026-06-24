@@ -70,10 +70,10 @@ export async function startWorker() {
   }
 
   const privilegeRefresher = new PrivilegeRefresher(
-    ServerEnv.jwtIssuer() + "/cosmetics.json",
-    ServerEnv.jwtIssuer() + "/profane_words_game_server",
+    ServerEnv.apiInternalBase() + "/cosmetics.json",
+    ServerEnv.apiInternalBase() + "/profane_words_game_server",
     ServerEnv.apiKey(),
-    ServerEnv.jwtIssuer() + "/reserved_clan_tags",
+    ServerEnv.apiInternalBase() + "/reserved_clan_tags",
     log,
   );
   privilegeRefresher.start();
@@ -477,7 +477,11 @@ export async function startWorker() {
           generateID(),
           persistentId,
           claims,
-          (ServerEnv.env() === GameEnv.Dev && (censoredUsername === "admin" || censoredUsername.toLowerCase().includes("[admin]"))) ? "admin" : (claims?.role ?? null),
+          ServerEnv.env() === GameEnv.Dev &&
+            (censoredUsername === "admin" ||
+              censoredUsername.toLowerCase().includes("[admin]"))
+            ? "admin"
+            : (claims?.role ?? null),
           flares,
           ip,
           censoredUsername,
@@ -565,7 +569,7 @@ async function startMatchmakingPolling(gm: GameManager) {
   startPolling(
     async () => {
       try {
-        const url = `${ServerEnv.jwtIssuer() + "/matchmaking/checkin"}`;
+        const url = `${ServerEnv.apiInternalBase() + "/matchmaking/checkin"}`;
         const gameId = generateGameIdForWorker();
         if (gameId === null) {
           log.warn(`Failed to generate game ID for worker ${workerId}`);

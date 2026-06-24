@@ -345,7 +345,7 @@ app.get("/auth/login/token", async (req, res) => {
 
   res.setHeader(
     "Set-Cookie",
-    `refresh_token=${user.id}; Path=/api-backend; HttpOnly; Max-Age=2592000; SameSite=Lax`,
+    `refresh_token=${user.id}; Path=/; HttpOnly; Max-Age=2592000; SameSite=None; Secure`,
   );
   res.json({ email: user.email });
 });
@@ -382,7 +382,7 @@ app.post("/auth/refresh", async (req, res) => {
 app.post("/auth/logout", (req, res) => {
   res.setHeader(
     "Set-Cookie",
-    `refresh_token=; Path=/api-backend; HttpOnly; Max-Age=0; SameSite=Lax`,
+    `refresh_token=; Path=/; HttpOnly; Max-Age=0; SameSite=None; Secure`,
   );
   res.json({ success: true });
 });
@@ -477,6 +477,25 @@ app.get("/news.json", (req, res) => {
       type: "announcement",
     },
   ]);
+});
+
+app.get("/cosmetics.json", (req, res) => {
+  res.json({
+    patterns: {},
+    flags: {},
+    colorPalettes: {},
+    skins: {},
+    currencyPacks: {},
+    subscriptions: {},
+  });
+});
+
+app.get("/profane_words_game_server", (req, res) => {
+  res.json([]);
+});
+
+app.get("/reserved_clan_tags", (req, res) => {
+  res.json([]);
 });
 
 app.get("/leaderboard/ranked", (req, res) => {

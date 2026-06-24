@@ -89,9 +89,12 @@ export class ServerEnv {
       ? "http://localhost:4000"
       : `https://${audience}/api-backend`;
   }
+  static apiInternalBase(): string {
+    return "http://127.0.0.1:4000";
+  }
   static async jwkPublicKey(): Promise<JWK> {
     if (ServerEnv.publicKey) return ServerEnv.publicKey;
-    const jwksUrl = ServerEnv.jwtIssuer() + "/.well-known/jwks.json";
+    const jwksUrl = ServerEnv.apiInternalBase() + "/.well-known/jwks.json";
     console.log(`Fetching JWKS from ${jwksUrl}`);
     const response = await fetch(jwksUrl);
     if (!response.ok) {
